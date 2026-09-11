@@ -9,7 +9,7 @@
 # is strictly prohibited. For permissions: https://github.com/Xiatsuma
 # =============================================================================
 
-name: Images Extractor
+name: Recovery Patcher
 
 on:
   workflow_dispatch:
