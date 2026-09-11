@@ -45,7 +45,7 @@ on:
         default: false
 
 jobs:
-  dump:
+  patching:
     runs-on: ubuntu-latest
     permissions:
       contents: write
