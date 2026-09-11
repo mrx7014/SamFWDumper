@@ -1,4 +1,11 @@
+#!/usr/bin/env bash
 set -e
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+MAGISKBOOT="$SCRIPT_DIR/../tools/android-tools/magiskboot"
+if [ ! -x "$MAGISKBOOT" ]; then
+  echo "magiskboot not found or not executable: $MAGISKBOOT" >&2
+  exit 1
+fi
 
 # Credits to @salvogiangri UN1CA
 HEX_PATCH()
@@ -43,11 +50,11 @@ echo "Dest file is $OUT_FILE"
 TMP_DIR="$(mktemp -d)"
 cd "$TMP_DIR"
 
-magiskboot unpack "$OUT_FILE"
+"$MAGISKBOOT" --unpack "$OUT_FILE"
 mkdir ramdisk_tmp; cd ramdisk_tmp
-magiskboot cpio '../ramdisk.cpio' 'extract system/bin/recovery system/bin/recovery'
-magiskboot cpio '../ramdisk.cpio' 'extract system/lib64/libselinux.so system/lib64/libselinux.so'
-magiskboot cpio '../ramdisk.cpio' 'extract prop.default prop.default'
+"$MAGISKBOOT" --cpio '../ramdisk.cpio' 'extract system/bin/recovery system/bin/recovery'
+"$MAGISKBOOT" --cpio '../ramdisk.cpio' 'extract system/lib64/libselinux.so system/lib64/libselinux.so'
+"$MAGISKBOOT" --cpio '../ramdisk.cpio' 'extract prop.default prop.default'
 
 # Recovery patches for Samsung TP1A (A05s) recovery images
 
@@ -97,10 +104,10 @@ sed -i 's/persist\.sys\.usb\.config\=mtp/persist\.sys\.usb\.config\=mtp\,adb/g' 
 sed -i 's/ro\.adb\.secure\=1/ro\.adb\.secure\=0/g' "prop.default"
 sed -i 's/ro\.debuggable\=0/ro\.debuggable\=1/g' "prop.default"
 
-magiskboot cpio '../ramdisk.cpio' 'add 755 system/bin/recovery system/bin/recovery'
-magiskboot cpio '../ramdisk.cpio' 'add 644 system/lib64/libselinux.so system/lib64/libselinux.so'
-magiskboot cpio '../ramdisk.cpio' 'add 644 prop.default prop.default'
+"$MAGISKBOOT" --cpio '../ramdisk.cpio' 'add 755 system/bin/recovery system/bin/recovery'
+"$MAGISKBOOT" --cpio '../ramdisk.cpio' 'add 644 system/lib64/libselinux.so system/lib64/libselinux.so'
+"$MAGISKBOOT" --cpio '../ramdisk.cpio' 'add 644 prop.default prop.default'
 
 cd ..
-magiskboot repack "$OUT_FILE" recovery.img
+"$MAGISKBOOT" --repack "$OUT_FILE" recovery.img
 mv recovery.img "$OUT_FILE"
