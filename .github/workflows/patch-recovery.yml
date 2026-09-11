@@ -108,8 +108,23 @@ jobs:
 
       - name: Patch Recovery
         run: |
-         bash scripts/recovery-patch.sh recovrey.img
-        
+          set -e
+          RECOVERY_XZ=$(find processed -maxdepth 1 -type f -name 'recovery*.img.xz' | head -n 1)
+          RECOVERY_IMG=$(find processed -maxdepth 1 -type f -name 'recovery*.img' | head -n 1)
+
+          if [ -n "$RECOVERY_XZ" ]; then
+            echo "Patching compressed recovery: $RECOVERY_XZ"
+            TMP_RECOVERY=$(mktemp --suffix=.img)
+            xz -d -c "$RECOVERY_XZ" > "$TMP_RECOVERY"
+            bash scripts/recovery-patch.sh "$TMP_RECOVERY"
+            xz -f -c "$TMP_RECOVERY" > "$RECOVERY_XZ"
+            rm -f "$TMP_RECOVERY"
+          elif [ -n "$RECOVERY_IMG" ]; then
+            echo "Patching recovery: $RECOVERY_IMG"
+            bash scripts/recovery-patch.sh "$RECOVERY_IMG"
+          else
+            echo "No recovery image was extracted; skipping recovery patch."
+          fi
 
       - name: Upload to GoFile
         if: ${{ github.event.inputs.upload_destination == 'gofile' }}
