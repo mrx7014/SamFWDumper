@@ -108,7 +108,7 @@ jobs:
 
       - name: Patch Recovery
         run: |
-         bash scripts/recovery-patch.sh
+         bash scripts/recovery-patch.sh recovrey.img
         
 
       - name: Upload to GoFile
