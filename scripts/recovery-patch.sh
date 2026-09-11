@@ -6,6 +6,7 @@ if [ ! -x "$MAGISKBOOT" ]; then
   echo "magiskboot not found or not executable: $MAGISKBOOT" >&2
   exit 1
 fi
+PATCH_COUNT=0
 
 # Credits to @salvogiangri UN1CA
 HEX_PATCH()
@@ -19,21 +20,22 @@ HEX_PATCH()
     local TO="$3"
 
     if [ ! -f "$FILE" ]; then
-        #LOGE "File not found: ${FILE//$WORK_DIR/}"
-        return 1
+        echo "Warning: file not found: $FILE; skipping this patch"
+        return 0
     fi
 
     FROM="$(tr "[:upper:]" "[:lower:]" <<< "$FROM")"
     TO="$(tr "[:upper:]" "[:lower:]" <<< "$TO")"
 
     if ! xxd -p -c 0 "$FILE" | grep -q "$FROM"; then
-        echo "No \"$FROM\" match in $FILE"
-        return 1
+        echo "Warning: no \"$FROM\" match in $FILE; skipping this patch"
+        return 0
     fi
 
     echo "Patching \"$FROM\" to \"$TO\" in $FILE"
     xxd -p -c 0 "$FILE" | sed "s/$FROM/$TO/" | xxd -r -p > "$FILE.tmp"
     mv "$FILE.tmp" "$FILE"
+    PATCH_COUNT=$((PATCH_COUNT + 1))
 
     return 0
 }
@@ -111,3 +113,4 @@ sed -i 's/ro\.debuggable\=0/ro\.debuggable\=1/g' "prop.default"
 cd ..
 "$MAGISKBOOT" --repack "$OUT_FILE" recovery.img
 mv recovery.img "$OUT_FILE"
+echo "Applied $PATCH_COUNT binary patch(es); property updates were applied when matching keys existed."
